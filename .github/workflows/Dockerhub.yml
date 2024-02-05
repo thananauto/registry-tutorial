@@ -1,0 +1,58 @@
+name: Upload images to Dockerhub registry
+on: 
+    push: 
+        branches: 
+            - main
+jobs:
+    deploy-to-docker-registry:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+            
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+                
+            - name: Docker meta
+              id: meta
+              uses: docker/metadata-action@v5
+              with:
+                images: |
+                    ${{ vars.DOCKER_USER_NAME }}/nginx-html
+                    
+                tags: |
+                    type=ref,event=branch
+                    type=ref,event=pr
+                    type=semver,pattern={{version}}
+                    type=semver,pattern={{major}}.{{minor}}
+                    type=sha
+           
+
+            - name: Login to Docker hub
+              uses: docker/login-action@v3
+              with:
+                username: ${{ vars.DOCKER_USER_NAME }}
+                password: ${{ secrets.DOCKER_PASSWORD }}
+                        
+            - name: Build a Docker images
+              if: ${{ github.ref_type == 'tag' }}
+              run: |
+                    export version=$(echo ${{ github.ref_name }}  | tr -d v)
+                    docker build -t ${{ vars.DOCKER_USER_NAME }}/nginx-html:$version .
+                    docker images
+                    docker run --name nginx-html -d  -p 8080:80 \
+                    ${{ vars.DOCKER_USER_NAME }}/nginx-html:$version
+
+            - name: Test a docker image    
+              run: |
+                    curl -I http://localhost:8080/index.html | grep -i nginx
+
+            - name: push Docker image
+              if: ${{ github.ref_type == 'tag' }}
+              uses: docker/build-push-action@v5
+              with:
+                context: .
+                push: true
+                tags: |
+                    ${{ steps.meta.outputs.tags }}
+                labels: ${{ steps.meta.outputs.labels }}
