@@ -20,7 +20,6 @@ jobs:
               uses: docker/metadata-action@v5
               with:
                 images: |
-                    ${{ vars.DOCKER_USER_NAME }}/nginx-html
                     ghcr.io/nginx-html
                     
                 tags: |
@@ -44,10 +43,10 @@ jobs:
               if: ${{ github.ref_type == 'tag' }}
               run: |
                     export version=$(echo ${{ github.ref_name }}  | tr -d v)
-                    docker build -t ${{ vars.DOCKER_USER_NAME }}/nginx-html:$version .
+                    docker build -t ghcr.io/nginx-html:$version .
                     docker images
                     docker run --name nginx-html -d  -p 8080:80 \
-                    ${{ vars.DOCKER_USER_NAME }}/nginx-html:$version
+                    ghcr.io/nginx-html:$version
 
             - name: Test a docker image    
               run: |
