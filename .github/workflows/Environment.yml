@@ -1,0 +1,29 @@
+name: Environment for production
+on:
+    push: 
+        branches: 
+            - 'main'
+jobs:
+    dev-env:
+        runs-on: ubuntu-latest
+        environment: 
+            name: dev
+            url: <dev deployment url>
+        steps:
+            - name: pull and run the image
+              run: |
+                 docker run -d --name alpine alpine tail -f /dev/null
+                 docker exec alpine echo ${{ secrets.APP_KEY }}
+                 docker exec alpine echo ${{ vars.ENV-NAME }}
+            
+    stage-env:
+        runs-on: ubuntu-latest
+        environment: 
+            name: prod
+            url: <prod deployment url>
+        steps:
+            - name: pull and run the image
+              run: |
+                    docker run -d --name alpine alpine tail -f /dev/null
+                    docker exec alpine echo ${{ secrets.APP_KEY }}
+                    docker exec alpine echo ${{ vars.ENV-NAME }}
