@@ -46,6 +46,7 @@ jobs:
                     ${{ vars.DOCKER_USER_NAME }}/nginx-html:$version
 
             - name: Test a docker image    
+              if: ${{ github.ref_type == 'tag' }}
               run: |
                     curl -I http://localhost:8080/index.html | grep -i nginx
 
